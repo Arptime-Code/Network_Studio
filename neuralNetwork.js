@@ -243,7 +243,7 @@ class NeuralNetwork {
 
 
 
-
+//Written by AI for quick testing
 function generateBalancedTrainingData(count) {
     let dataset = [];
 
@@ -329,6 +329,7 @@ const testCases = [
     { input: [0.2, 0.3, -0.6, 0.5, 0.5, -0.4,  0.25,  0.35], actual: 0.071 }
 ];
 
+//Written by AI
 for (const [i, test] of testCases.entries()) {
     network.valueLayers[0] = test.input;
     await network.feedForward();
