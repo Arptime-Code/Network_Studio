@@ -98,20 +98,19 @@ class NeuralNetwork {
 
     backPropagationSum(innerFunction, layer, input) {
         let sum = 0;
-        let currentLayerNeuronCount = this.valueLayers[layer].length;
 
-        for (let k = 0; k < currentLayerNeuronCount; k++) {
+        for (let k = 0; k < this.valueLayers[layer].length; k++) {
             let output = k;
             let z = this.computeZ(layer, output);
-            
+           //Normally apply activation function 
             let R_prime = this.derivedGelu(z);
-            // CHANGED: Output layer derivative is 1 (linear activation)
+            //Output layer activation always linear
             if (layer === this.valueLayers.length - 1) {
                 R_prime = 1;
             }
-
+            //Call backprop function with new value for next more inner function
             let innerVal = innerFunction.call(this, output);
-            // CHANGED: Read from oldWeights snapshot so updates don't distort recursive calls
+            //Get the weight form the old weights array to not accidentally get updated weights
             let weight = this.oldWeights[layer - 1][output][input];
 
             sum += innerVal * R_prime * weight;
@@ -124,9 +123,9 @@ class NeuralNetwork {
             let maxLayers = this.weightLayers.length;
             let outputLayerIndex = this.valueLayers.length - 1;
 
-            // CHANGED: 1-line native clone snapshot so backPropagationSum reads original weights
+            //Copy weights to use later to not use updated weights for updating
             this.oldWeights = structuredClone(this.weightLayers);
-
+            //calculate the always the same most inner function in the chain
             let currentInnerFunc = function(neuronIndex) {
                 let y_hat = this.valueLayers[outputLayerIndex][neuronIndex];
                 let y = output[neuronIndex];
@@ -138,15 +137,15 @@ class NeuralNetwork {
 
                 for (let j = 0; j < this.valueLayers[targetValueLayer].length; j++) {
                     let z = this.computeZ(targetValueLayer, j);
-                    
+                    //Normal activation is Gelu
                     let R_prime = this.derivedGelu(z);
-                    // CHANGED: Output layer derivative is 1 (linear activation)
+                    //Output layer activation linear
                     if (targetValueLayer === outputLayerIndex) {
                         R_prime = 1;
                     }
-
+                    //Repeat this function for al weights(returns the backPropSum functions output)
                     let innerVal = currentInnerFunc.call(this, j);
-
+                    //Calculate delta to nudge the weights togetehr with the activated value
                     let delta = innerVal * R_prime;
 
                     //Update with learning rate (first biases)
@@ -162,7 +161,7 @@ class NeuralNetwork {
                 //Nest the new function to go one level deeper (one layer one towards the start of the network)
                 let prevInnerFunc = currentInnerFunc;
                 let layerToSum = targetValueLayer;
-
+                //Do backprop for all values for the weights
                 currentInnerFunc = function(inputIndex) {
                     return this.backPropagationSum(prevInnerFunc, layerToSum, inputIndex);
                 };
@@ -243,7 +242,7 @@ class NeuralNetwork {
 
 
 
-//Written by AI for quick testing
+//Written by AI for quick testing to estimate distance between the two closest points which otherwise would be an O(n squared) problem(naively solved); with NN now O(1-ish) estimation
 function generateBalancedTrainingData(count) {
     let dataset = [];
 
@@ -321,7 +320,7 @@ await network.feedForward();
 console.log("Predicted Min Pair Distance:", network.valueLayers[network.valueLayers.length - 1][0]);
 console.log("Actual Min Pair Distance:", trainingData[0][1][0]);
 
-
+//Written by AI:
 // 3 Hardcoded Unseen Test Points [x4, y4] and their exact actual min distances
 const testCases = [
     { input: [0.2, 0.3, -0.6, 0.5, 0.5, -0.4,  0.15, -0.25], actual: 0.381 },
@@ -329,7 +328,7 @@ const testCases = [
     { input: [0.2, 0.3, -0.6, 0.5, 0.5, -0.4,  0.25,  0.35], actual: 0.071 }
 ];
 
-//Written by AI
+//Written by AI:
 for (const [i, test] of testCases.entries()) {
     network.valueLayers[0] = test.input;
     await network.feedForward();
